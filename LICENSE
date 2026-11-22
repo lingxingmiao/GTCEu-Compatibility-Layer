@@ -1,6 +1,15 @@
 MIT License
 
-Copyright (c) 2022 CleanroomMC 
+Copyright (c) 2026 the GTCEu Compatibility Layer contributors
+
+=========================================================================
+NOTE: this project is NOT MIT-only. See LICENSE-NOTICE.md.
+The `src/main/java/gregtech/**` sources are derived from
+GregTech CE: Unofficial 2.8.10 and are licensed under LGPL-3.0
+(full text: LICENSE-GTCEu-LGPL-3.0.txt). The MIT grant below covers
+only this project's own code (ASM transformers, diagnostics,
+StructurePredicates, MetaTileEntitiesCompat, build scripts, ...).
+=========================================================================
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -11,6 +11,22 @@
 > 编译需要 Java 21 工具链，且需要自备 3 个 compileOnly 参考 jar —— 见
 > [libs/README.md](libs/README.md)（这些 jar 不入库）。
 
+## 许可（重要）
+
+本仓库**不是 MIT-only，而是双许可混合**：
+
+| 范围 | 许可 |
+|---|---|
+| `src/main/java/gregtech/**`（vendored 的 GTCEu 2.8.10 源码，14 个文件） | **LGPL-3.0** |
+| 其余原创代码（ASM transformer / 诊断 / `StructurePredicates` / 构建脚本等） | MIT |
+
+LGPL-3.0 全文见 [LICENSE-GTCEu-LGPL-3.0.txt](LICENSE-GTCEu-LGPL-3.0.txt)，
+逐文件的来源与**修改说明**见 [LICENSE-NOTICE.md](LICENSE-NOTICE.md)。
+
+因为你把本兼容层和上游一起编译进同一个 jar，**分发构建产物即等于分发含
+LGPL-3.0 代码的作品**，需要一并提供：许可声明 + 可获取完整对应源码（本仓库即为
+Corresponding Source）。请不要把 LGPL 部分单独改声明为 MIT。
+
 ## 功能概述
 
 这个兼容层模组解决了 GTCEu 2.8 和 2.9 之间的 API 不兼容问题：
