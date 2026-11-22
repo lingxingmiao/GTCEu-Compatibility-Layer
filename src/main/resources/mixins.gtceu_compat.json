@@ -1,0 +1,9 @@
+{
+  "package": "com.gtceu.compat.mixin",
+  "required": true,
+  "refmap": "mixins.gtceu_compat.refmap.json",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [],
+  "server": [],
+  "client": []
+}

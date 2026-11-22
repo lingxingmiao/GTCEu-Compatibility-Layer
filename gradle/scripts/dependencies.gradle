@@ -1,0 +1,56 @@
+apply from: 'gradle/scripts/helpers.gradle'
+
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name 'Modrinth'
+                url 'https://api.modrinth.com/maven'
+            }
+        }
+        filter {
+            includeGroup 'maven.modrinth'
+        }
+    }
+    mavenLocal()
+}
+
+configurations {
+    shade
+    implementation.extendsFrom shade
+}
+
+dependencies {
+    // Include StripLatestForgeRequirements by default for the dev env
+    runtimeOnly 'com.cleanroommc:strip-latest-forge-requirements:1.0'
+    runtimeOnly 'com.cleanroommc:osxnarratorblocker:1.0'
+
+    // ASM + LaunchWrapper classes for the coremod transformer.
+    // Both are provided by the Forge/Cleanroom runtime; compileOnly keeps them out of the jar.
+    compileOnly 'net.minecraft:launchwrapper:1.12'
+    compileOnly 'org.ow2.asm:asm:7.2'
+    compileOnly 'org.ow2.asm:asm-tree:7.2'
+    compileOnly 'org.ow2.asm:asm-commons:7.2'
+
+    // Vendored GTCEu 2.8 pattern.* compatibility sources (see
+    // src/main/java/gregtech/api/pattern/) need GTQT 2.9's gregtech.* classes
+    // at COMPILE time only. At runtime these are supplied by the GTQT 2.9 host
+    // mod; nothing from the jar is bundled into the deliverable.
+    compileOnly files('libs/gregtech-gtqt-1.12.2-2.9.0.jar')
+    // Transitive compile-time deps of GTQT's MetaTileEntity / block interfaces.
+    compileOnly files('libs/modularui-3.1.5.jar')
+    compileOnly files('libs/ctm.jar')
+}
+
+// Need reobfJar to use uber jars
+if (!configurations.shade.dependencies.empty) {
+    tasks.named('reobfJar').configure {
+        inputJar.set(tasks.named('shadowJar').flatMap({ it.archiveFile }))
+    }
+}
+
+tasks.shadowJar {
+    enabled = !project.configurations.shade.dependencies.empty
+    archiveClassifier = 'uberdev'
+    configurations = [ project.configurations.shade ]
+}

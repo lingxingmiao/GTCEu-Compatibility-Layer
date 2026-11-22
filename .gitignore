@@ -1,0 +1,30 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
+.gradle
+
+# kate
+*.kate-swp
+
+# other
+eclipse
+run
+
+# Local compile-time-only reference jars (GTQT 2.9 host, ModularUI, CTM).
+# They are third-party distributions and are NOT ours to redistribute, and the
+# GTQT jar alone is ~33 MB. See libs/README.md for how to fetch/place them.
+libs/*.jar
