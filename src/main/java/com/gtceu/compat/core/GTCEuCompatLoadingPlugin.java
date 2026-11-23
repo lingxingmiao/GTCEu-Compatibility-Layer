@@ -64,6 +64,8 @@ public class GTCEuCompatLoadingPlugin implements IFMLLoadingPlugin {
                 // Auto-resolve hardcoded 2.8 addon MTE ids colliding with 2.9
                 "com.gtceu.compat.core.asm.MTERegistryIdCollisionTransformer",
                 // Skip unregistered duplicate materials during pipe registration
+                // 2.8 EBF_GASES map shape for ZBGT
+                "com.gtceu.compat.core.asm.EbfGasesBridgeTransformer",
                 "com.gtceu.compat.core.asm.PipeMaterialSkipTransformer",
                 // Re-register a material's fluid if the core walk missed it
                 "com.gtceu.compat.core.asm.MaterialFluidFallbackTransformer",
@@ -78,7 +80,7 @@ public class GTCEuCompatLoadingPlugin implements IFMLLoadingPlugin {
                 // Restore 2.8 WireProperties.getVoltage():int (2.9 widened to long)
                 "com.gtceu.compat.core.asm.WirePropertiesVoltageBridgeTransformer",
                 // Skip ZBGT's alloyBlast pass (2.8 EBF_GASES map shape removed in 2.9)
-                "com.gtceu.compat.core.asm.ZBGTAlloyBlastSkipTransformer",
+                // "com.gtceu.compat.core.asm.ZBGTAlloyBlastSkipTransformer", // try real pass with EBF_GASES bridge
                 // Skip ZBGT's 2.8-only assembler build action
                 "com.gtceu.compat.core.asm.ZBGTAutomationSkipTransformer",
                 // Restore 2.8 Recipe.getOutputs():NonNullList. 2.8 itself builds
@@ -95,6 +97,8 @@ public class GTCEuCompatLoadingPlugin implements IFMLLoadingPlugin {
                 // Relax 2.9''s hard category/RecipeMap identity check
                 // Restore LFF forging-cooled outputs when 2.9 lookups fail
                 "com.gtceu.compat.core.asm.LffOutputFallbackTransformer",
+                // Relax 2.9-only EUt=0 / Duration<=0 hard checks
+                "com.gtceu.compat.core.asm.RecipeValidationCompatTransformer",
                 "com.gtceu.compat.core.asm.CategoryMapCompatTransformer",
                 // 2.8 store semantics: duplicates overwrite, null clears
                 "com.gtceu.compat.core.asm.RecipePropertyStoreOverrideTransformer",

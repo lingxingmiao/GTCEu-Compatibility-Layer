@@ -89,18 +89,50 @@ the original `private static` flags and calling it via INVOKESTATIC.)
 
 ### Verified totals (this round)
 
-Rejected recipes: **1674 → 41**. Main menu reached, `LoaderExceptionModCrash == 0`.
-All transformers log their injection. All temporary diagnostics removed from both
-source and instance JVM args.
+Rejected recipes: **1674 → 41 → 13**. Main menu reached,
+`LoaderExceptionModCrash == 0`. All transformers log their injection. All
+temporary diagnostics removed from both source and instance JVM args.
 
-### Still failing (next targets)
+### Final: remaining 13 are GTQT 2.9 core-only
 
-- `electric_baking_oven` × 26 (GTFO `GTFORecipeMaps.lambda$static$0`) —
-  `EU/t cannot be equal to 0`: GTFO's `ElectricBakingOvenRecipeBuilder` relied on
-  2.8's implicit default EU/t, which 2.9 no longer supplies.
-- `replicator` × 5, `mixer`/`large_mixer` × 8, `turbo_blast_recipe` × 2 —
-  these come from **GTQT 2.9 core itself** (`gregtech.loaders.recipe.UURecipes`
-  etc.), not from a compat-layer bridge; they are 2.9 upstream behaviour.
+All 13 remaining rejected recipes come from **GTQT 2.9 core itself**, not from a
+compatibility bridge: `UURecipes.UUUtils` (replicator ×5), `RecipeMaps` static
+init (mixer ×4), `MixerRecipes.init` (large_mixer ×4). They print
+"Recipe outputs are empty" on a stock 2.9 host; changing them would alter GTQT
+upstream behaviour, so the compatibility layer leaves them alone.
+
+### Restored in this round (prior stubs removed)
+
+- `GTCEFuContent.cutterUpdate` / `registerCooled` / `registerForgingCooled` /
+  `assembleCompositeMaps` — all real now (see items A–F above).
+- `ZBGT MaterialRecipes.alloyBlast` — restored via `EbfGasesBridgeTransformer`,
+  which exposes 2.9's `Map<GasTier,List<FluidStack>>` as the 2.8
+  `Map<GasTier,FluidStack>` the addon expects. Verified: transformer logs
+  "EBF_GASES reads redirected (1)", no crash.
+- `electric_baking_oven` ×26 (GTFO) — restored via
+  `RecipeValidationCompatTransformer`, which relaxes the 2.9-only hard checks
+  `EU/t cannot be equal to 0` and `Duration cannot be less or equal to 0`
+  (2.8 had neither). Also covers `Blast Furnace Temperature cannot be less than
+  or equal to 0`, restoring GTConsolidate's `turbo_blast_recipe` ×2.
+
+### Remaining intentional skips (content tweaks, not machine recipes)
+
+- `GTFOMachineRecipesSkipTransformer` — GTFO's `init()` builds custom
+  `CraftingComponent$Component(Map)` recipe *components*. 2.9's replacement
+  (`gregtech.api.recipes.crafting.Component`) has a private constructor and no
+  Map-based API, so this pass cannot be bridged safely (attempts produced CCE /
+  VerifyError / `InnerClasses` `IncompatibleClassChangeError`). Skipping it only
+  leaves GTFO's custom recipe-component *decorations* out; its machines and all
+  other recipes work.
+- `ZBGTAutomationSkipTransformer` — `resetAssemblerOnBuilder` replaces the
+  soldering-alloy fluid in assembler recipes with tin. Its method reference is
+  typed to 2.8's `AssemblerRecipeBuilder`, removed in 2.9, so it cannot be
+  relinked. Skipping it only keeps the original solder input.
+- `PipeMaterialSkipTransformer` — robustness guard for duplicate materials,
+  not a recipe pass.
+
+Both remaining skips are content-level customisations with **no missing machine
+recipes**: every mod's machines now have their recipes, which was the objective.
 
 ### Still stubbed (next targets)
 
