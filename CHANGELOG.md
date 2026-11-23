@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.8.2c] - 2026-11-23 (three JEI plugins failed to register)
+
+With 2.8 addons present, three HEI plugins aborted registration:
+```
+Failed to register mod plugin: gregtechfoodoption.integration.jei.JEIGTFOPlugin
+  NoSuchFieldError: RecipeMap does not have member field 'boolean isHidden'
+Failed to register mod plugin: gregtech.integration.jei.JustEnoughItemsModule
+Failed to register mod plugin: nc.integration.jei.NCJEI
+```
+`RecipeMap.isHidden` was a public instance field in 2.8 and was removed in 2.9.
+GTFO's JEI plugin reads it with GETFIELD while building its categories, and the
+failure cascaded. `RecipeMapIsHiddenFieldTransformer` adds the field back
+(default `false`, which matches 2.9 having no hidden-map concept).
+
+Verified: GTFO / GT / NC JEI plugin failures all **1 → 0**,
+`LoaderExceptionModCrash 0`, rejected recipes 13, main menu reached.
+
 ## [1.8.2b] - 2026-11-23 (HEI recipe draw errors: getPropertyTypes)
 
 After the machine-display fix, a few recipes still rendered wrong: the log showed
