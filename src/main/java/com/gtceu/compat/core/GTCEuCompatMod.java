@@ -25,7 +25,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class GTCEuCompatMod {
 
     public static final String MODID = "gtceu_compat";
-    public static final String VERSION = "1.8.1";
+    public static final String VERSION = "1.8.2";
     public static final String NAME = "GTCEu Compatibility Layer";
 
     private static GTCEuVersion detectedVersion;

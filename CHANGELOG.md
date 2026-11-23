@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.8.2] - 2026-11-23 (HEI: recipes showed without their machine)
+
+**Symptom (user-reported):** many machines (蓄电池, 绝对零度冷冻机, 龙之融合合成器,
+大型集气室, 部件装配线, 龙之装备升级, 虚空矿机, 精密组装机, 分子转换器, 材料复制,
+电路工厂, 材料解构, 矿石处理工厂, 涡轮鼓风高炉, 电路装配线, …) appeared in HEI
+as recipes **with no machine column**.
+
+**Root cause (from the log):** GTQT's own JEI/HEI plugin failed to register:
+```
+Failed to register mod plugin: gregtech.integration.jei.JustEnoughItemsModule
+IllegalStateException: MTE Trait RecipeMapWorkable has name RecipeMapWorkable
+    but is not instanceof AbstractRecipeLogic
+  at MetaTileEntity.getRecipeLogic()
+  at JustEnoughItemsModule.register()   <- enumerates ALL MTEs for recipe maps
+```
+2.8 addons define their own legacy `RecipeMapWorkable` MTETrait (the 2.8 recipe
+logic). 2.9's `getRecipeLogic()` asserts that a trait with this name must be an
+`AbstractRecipeLogic`; when HEI walked every MTE it hit a legacy trait and the
+**whole GT HEI plugin aborted**, so no GT machine categories were registered —
+only the bare recipes remained.
+
+**Fix:** `RecipeLogicTraitCompatTransformer` changes one opcode in
+`MetaTileEntity.getRecipeLogic()`: the `IFNULL returnNull` inside the throw branch
+becomes `GOTO returnNull`, so an incompatible legacy trait returns `null` (same
+as "no recipe logic") instead of throwing. Single opcode change, no stack/frame
+change — this matters because `COMPUTE_FRAMES` while transforming this very class
+throws `ClassCircularityError`.
+
+Also hardened `CategoryMapCompatTransformer` to replace a mismatched category
+with the recipe map's primary category both in `RecipeBuilder.category(...)` and
+in the `RecipeBuilder(Recipe, RecipeMap)` copy constructor, while keeping the
+`validate()` INVALID→VALID relaxation so no recipe is lost.
+
+**Verified (real Cleanroom launch):** `GT JEI plugin fail: 0` (was 1), the
+transformer logs its injection, `LoaderExceptionModCrash: 0`, rejected recipes
+still 13 (GTQT-core-only). Main menu reached.
+
 ## [1.8.1] - 2026-11-23 (restore recipes that were stubbed to get the pack booting)
 
 1.8.0 reached the main menu by **stubbing** several 2.8 recipe passes. Those stubs

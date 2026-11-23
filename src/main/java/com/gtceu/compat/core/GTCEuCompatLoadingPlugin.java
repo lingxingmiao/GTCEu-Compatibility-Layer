@@ -99,6 +99,8 @@ public class GTCEuCompatLoadingPlugin implements IFMLLoadingPlugin {
                 "com.gtceu.compat.core.asm.LffOutputFallbackTransformer",
                 // Relax 2.9-only EUt=0 / Duration<=0 hard checks
                 "com.gtceu.compat.core.asm.RecipeValidationCompatTransformer",
+                // Keep JEI/HEI plugin alive on 2.8 legacy RecipeMapWorkable traits
+                "com.gtceu.compat.core.asm.RecipeLogicTraitCompatTransformer",
                 "com.gtceu.compat.core.asm.CategoryMapCompatTransformer",
                 // 2.8 store semantics: duplicates overwrite, null clears
                 "com.gtceu.compat.core.asm.RecipePropertyStoreOverrideTransformer",
