@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.8.2d] - 2026-11-23 (investigation: "recipes show but no machine" is GTQT upstream)
+
+User reported a set of entries whose HEI recipes show no machine: 蓄电池, 绝对零度
+冷冻机, 龙之融合合成器, 大型集气室, 部件装配线, 龙之装备升级, 虚空矿机, 精密组装机,
+尾气轮机燃料, 神锻升级消耗, 分子转换器, 高压蒸汽轮机燃料, 材料复制, 电路工厂,
+超临界蒸汽轮机燃料, 材料解构, 矿石处理工厂, 涡轮鼓风高炉, 电路装配线.
+
+**Finding:** most of these are **RecipeMap categories, not machines**, and they
+are defined by **GTQT 2.9 core itself** as *JEI-display-only fake recipe maps*:
+
+- `recipemap.battery_accumulator`, `recipemap.godforge_upgrade_costs`,
+  `recipemap.exhaust_gas_turbine`, `recipemap.high_pressure_steam_turbine`,
+  `recipemap.supercritical_steam_turbine` — all in GTQT 2.9's `zh_cn.lang`.
+- `GodforgeRecipeLoader.java:248` literally says:
+  *"Registers the fake recipes into the GODFORGE_UPGRADE_COST_RECIPES RecipeMap
+  for JEI display."*
+- `MultiblockRegistration.java:347` has the Battery Accumulator MTE registration
+  **commented out**: `//BATTERY_ACCUMULATOR = registerMetaTileEntity(1273, ...)`.
+
+So there is intentionally **no machine** for those recipe maps, in vanilla GTQT
+2.9 too. HEI correctly shows the recipes with no machine column. This is not a
+compat-layer regression and cannot be "fixed" by bridging — the machines were
+never registered upstream. Genuine addon machines (GTConsolidate's absolute
+freezer / circuit factory / turbo blast furnace, etc.) do have their MTEs and
+their recipes; those categories were restored by the JEI-plugin fixes above.
+
+To confirm end to end, check these same entries in a vanilla GTQT 2.9 pack: the
+fake category entries behave identically.
+
 ## [1.8.2c] - 2026-11-23 (three JEI plugins failed to register)
 
 With 2.8 addons present, three HEI plugins aborted registration:
