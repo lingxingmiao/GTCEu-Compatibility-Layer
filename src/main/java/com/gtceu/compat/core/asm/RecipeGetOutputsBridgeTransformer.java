@@ -51,17 +51,18 @@ public class RecipeGetOutputsBridgeTransformer implements IClassTransformer, Opc
 
         MethodNode mn = new MethodNode(ACC_PUBLIC, "getOutputs", OLD_DESC, null, null);
         InsnList il = mn.instructions;
-        // NonNullList out = NonNullList.func_191197_a();   // SRG name for create()
-        il.add(new MethodInsnNode(INVOKESTATIC, NNL, "func_191197_a", "()L" + NNL + ";", false));
-        il.add(new VarInsnNode(ASTORE, 1));
-        // out.addAll(this.getOutputs());
-        il.add(new VarInsnNode(ALOAD, 1));
+        // return NonNullList.func_193580_a(ItemStack.EMPTY, this.getOutputs().toArray());
+        // func_193580_a is MC 1.12.2's SRG name for
+        // NonNullList.withSize/from(Object, Object[]) — the same factory GTCEu 2.8
+        // itself uses in GTUtility.copyStackList, so the name is confirmed working.
+        il.add(new FieldInsnNode(GETSTATIC, "net/minecraft/item/ItemStack",
+                "field_190927_a", "Lnet/minecraft/item/ItemStack;"));
         il.add(new VarInsnNode(ALOAD, 0));
         il.add(new MethodInsnNode(INVOKEVIRTUAL, TARGET, "getOutputs", NEW_DESC, false));
-        il.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "addAll",
-                "(Ljava/util/Collection;)Z", true));
-        il.add(new InsnNode(POP));
-        il.add(new VarInsnNode(ALOAD, 1));
+        il.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "toArray",
+                "()[Ljava/lang/Object;", true));
+        il.add(new MethodInsnNode(INVOKESTATIC, NNL, "func_193580_a",
+                "(Ljava/lang/Object;[Ljava/lang/Object;)L" + NNL + ";", false));
         il.add(new InsnNode(ARETURN));
         cn.methods.add(mn);
 

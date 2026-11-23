@@ -81,13 +81,22 @@ public class GTCEuCompatLoadingPlugin implements IFMLLoadingPlugin {
                 "com.gtceu.compat.core.asm.ZBGTAlloyBlastSkipTransformer",
                 // Skip ZBGT's 2.8-only assembler build action
                 "com.gtceu.compat.core.asm.ZBGTAutomationSkipTransformer",
-                // NOTE: RecipeGetOutputsBridgeTransformer is DISABLED: NonNullList's
-                // runtime factory is SRG-renamed and not stable to call by name.
-                // Instead AddonPackageRemapTransformer rewrites the addon-side
-                // getOutputs()/toArray call sites to java.util.List.
-                // "com.gtceu.compat.core.asm.RecipeGetOutputsBridgeTransformer",
-                // Skip GTCEFuContent's 2.8 NonNullList-based late recipe passes
-                "com.gtceu.compat.core.asm.AddonRecipePassSkipTransformer",
+                // Restore 2.8 Recipe.getOutputs():NonNullList. 2.8 itself builds
+                // NonNullList via NonNullList.func_193580_a(Object,Object[]) (see
+                // GTUtility.copyStackList), so that factory name is confirmed.
+                "com.gtceu.compat.core.asm.RecipeGetOutputsBridgeTransformer",
+                // NOTE: GTRecipeInputStacksNormalizer is DISABLED. Turning empty arrays
+                // into null breaks 2.9's own callers (GTRecipeOreInput.acceptsStack
+                // dereferences the result without a null check). The addon-side
+                // call sites are guarded instead.
+                // "com.gtceu.compat.core.asm.GTRecipeInputStacksNormalizer",
+                // Guard addon getInputStacks()[0] sites against 2.9''s empty arrays
+                "com.gtceu.compat.core.asm.GetInputStacksEmptyGuardTransformer",
+                // Recipe.propertyStorage(): EMPTY -> writable impl
+                "com.gtceu.compat.core.asm.WritablePropertyStorageTransformer",
+                // GTCEFuContent''s late passes now run for real (were stubbed while
+                // getOutputs() was unbridged); keep the class for regressions only.
+                // "com.gtceu.compat.core.asm.AddonRecipePassSkipTransformer",
                 // Inject 2.9 createStructureDefinition() into 2.8 multiblocks
                 "com.gtceu.compat.core.asm.StructureDefinitionCompatTransformer",
                 // Bridge SRG-named getters to MCP names (BlockWireCoil CoilType)

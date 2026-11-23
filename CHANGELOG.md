@@ -1,6 +1,63 @@
 # Changelog
 
-## [1.8.0] - 2026-11-22 (Java 21 + unified 2.8 API restoration) 鈥?MAIN MENU REACHED
+## [1.8.1] - 2026-11-23 (restore recipes that were stubbed to get the pack booting)
+
+1.8.0 reached the main menu by **stubbing** several 2.8 recipe passes. Those stubs
+meant machines had no recipes. This release restores them for real for
+GTCEFuContent; the remaining stubs are tracked at the bottom.
+
+### GTCEFuContent — recipes restored (verified in a real launch)
+
+Three separate contracts had to be fixed, each found by re-running with the stub
+removed:
+
+1. **`Recipe.getOutputs()` returned `NonNullList`, 2.9 returns `List`.**
+   The earlier bridge guessed the factory name (`func_191197_a`) and silently
+   failed. 2.8's own `GTUtility.copyStackList` reveals the correct runtime
+   factory: **`NonNullList.func_193580_a(Object, Object[])`**. The bridge now does
+   `NonNullList.func_193580_a(ItemStack.EMPTY, getOutputs().toArray())`.
+   → re-enabled `RecipeGetOutputsBridgeTransformer`; the recipe-pass skipping is
+   now disabled.
+
+2. **`RecipePropertyStorage.EMPTY.store(...)` throws `UnsupportedOperationException: empty`.**
+   2.8 addons write into a recipe's storage directly
+   (`LinearForgingFurnaceLoader.assignRecipeType`). New
+   `WritablePropertyStorageTransformer` wraps `Recipe.propertyStorage()` and
+   substitutes a lazily-created **cached** `RecipePropertyStorageImpl` whenever the
+   recipe carries only the read-only `EMPTY` singleton. Non-empty storages pass
+   through untouched, so 2.9's own recipes keep their exact behaviour.
+
+3. **`GTRecipeInput.getInputStacks()` can return a zero-length array on 2.9.**
+   2.8 addons guard with `if (stacks != null)` and then read `stacks[0]`
+   (`produceForgingCooledRecipes`), so the empty array threw
+   `ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0`.
+   *The first attempt was wrong*: normalising the getter (empty → null) broke 2.9's
+   own `GTRecipeOreInput.acceptsStack`, which dereferences the result without a
+   null check. That normaliser is therefore **disabled**, and
+   `GetInputStacksEmptyGuardTransformer` guards the **addon call sites** instead,
+   rewriting
+   `ALOAD n ; IFNULL skip` into
+   `DUP ; ARRAYLENGTH ; IFNE ok ; POP ; GOTO skip ; ok: IFNULL skip`
+   so an empty array takes exactly the branch the 2.8 `null` case already took.
+   Pattern matching skips ASM Label/LineNumber pseudo-nodes (opcode < 0).
+
+### Verified
+
+Real Cleanroom launch with the built jar: `LoaderExceptionModCrash == 0`, main
+menu reached (`Narrator library ... successfully loaded`, Realms client started),
+and both `UnsupportedOperationException` and `ArrayIndexOutOfBounds` occurrences
+are **0**. All three transformers log their injection (`getOutputs` bridge,
+`propertyStorage` wrapper, `guarded 1 getInputStacks()[0] site`).
+
+### Still stubbed (next targets)
+
+- ZBGT `MaterialRecipes.alloyBlast` — `CraftingComponent.EBF_GASES` value type
+  changed from `FluidStack` to `List<FluidStack>`
+- ZBGT `RecipeMapTrollery.resetAssemblerOnBuilder` — 2.8-only
+  `AssemblerRecipeBuilder` API (`isWithRecycling`, `clearFluidInputs`)
+- GTFO `GTFOMachineRecipes.init` — 2.8 `CraftingComponent$Component(Map)` ctor
+
+## [1.8.0] - 2026-11-22 (Java 21 + unified 2.8 API restoration) — MAIN MENU REACHED
 
 **The pack now boots to the main menu**: `LoaderExceptionModCrash == 0`,
 "Narrator library successfully loaded", Realms client started, 156 mods loaded
