@@ -71,14 +71,36 @@ Both `UnsupportedOperationException` and `ArrayIndexOutOfBounds` occurrences are
 **0**, and every transformer logs its injection. **Total rejected recipes dropped
 from 1674 to 670.**
 
+**F. `lff_blast_forging_cooled` × 629 — fixed.**
+`LinearForgingFurnaceLoader.attemptForgingCooledRecipe(OrePrefix, RecipeBuilder)`
+rebuilds a builder's outputs by resolving each source output through
+`OreDictUnifier.getMaterial()` + `getPrefix()`. On 2.9 those lookups can fail, so
+the rebuilt builder ends up with **no outputs** and GTQT drops the recipe with
+"Recipe outputs are empty". Runtime diagnostics proved the source recipes were
+fine (1241 source recipes had `outputs=1`, only 15 had `outputs=0`).
+`LffOutputFallbackTransformer` wraps the method: if the rebuilt builder has an
+empty output list while the source still has outputs, the source outputs are
+copied in before returning. When the method intentionally returns `null`, or the
+2.8 path already worked, nothing changes.
+→ measured effect: rejected `lff_blast_forging_cooled` recipes **629 → 0**.
+(First attempt failed with `NegativeArraySizeException(-1)` from ASM
+COMPUTE_FRAMES after the original method's access was changed; fixed by keeping
+the original `private static` flags and calling it via INVOKESTATIC.)
+
+### Verified totals (this round)
+
+Rejected recipes: **1674 → 41**. Main menu reached, `LoaderExceptionModCrash == 0`.
+All transformers log their injection. All temporary diagnostics removed from both
+source and instance JVM args.
+
 ### Still failing (next targets)
 
-- `lff_blast_forging_cooled` × **629** — outputs empty. These come from
-  `LinearForgingFurnaceLoader.attemptForgingCooledRecipe`, which derives outputs
-  from `OreDictUnifier.getMaterial(...)` over the *source* builder's outputs;
-  needs bytecode-level tracing of that path.
-- `electric_baking_oven` × 26 (GTFO, still-stubbed `GTFOMachineRecipes.init`),
-  `replicator` × 5, `mixer`/`large_mixer` × 8, `turbo_blast_recipe` × 2.
+- `electric_baking_oven` × 26 (GTFO `GTFORecipeMaps.lambda$static$0`) —
+  `EU/t cannot be equal to 0`: GTFO's `ElectricBakingOvenRecipeBuilder` relied on
+  2.8's implicit default EU/t, which 2.9 no longer supplies.
+- `replicator` × 5, `mixer`/`large_mixer` × 8, `turbo_blast_recipe` × 2 —
+  these come from **GTQT 2.9 core itself** (`gregtech.loaders.recipe.UURecipes`
+  etc.), not from a compat-layer bridge; they are 2.9 upstream behaviour.
 
 ### Still stubbed (next targets)
 

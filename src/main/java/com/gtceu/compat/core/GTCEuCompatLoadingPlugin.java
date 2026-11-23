@@ -93,6 +93,8 @@ public class GTCEuCompatLoadingPlugin implements IFMLLoadingPlugin {
                 // Guard addon getInputStacks()[0] sites against 2.9''s empty arrays
                 "com.gtceu.compat.core.asm.GetInputStacksEmptyGuardTransformer",
                 // Relax 2.9''s hard category/RecipeMap identity check
+                // Restore LFF forging-cooled outputs when 2.9 lookups fail
+                "com.gtceu.compat.core.asm.LffOutputFallbackTransformer",
                 "com.gtceu.compat.core.asm.CategoryMapCompatTransformer",
                 // 2.8 store semantics: duplicates overwrite, null clears
                 "com.gtceu.compat.core.asm.RecipePropertyStoreOverrideTransformer",
