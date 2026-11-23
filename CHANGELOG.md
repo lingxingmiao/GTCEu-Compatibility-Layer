@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.8.2b] - 2026-11-23 (HEI recipe draw errors: getPropertyTypes)
+
+After the machine-display fix, a few recipes still rendered wrong: the log showed
+dozens of
+
+```
+NoSuchMethodError: java.util.Set gregtech.api.recipes.Recipe.getPropertyTypes()
+  at GTRecipeWrapper.localvar$beb000$gtexpert$fixYPosition   (GTExpert's JEI mixin)
+  at GTRecipeWrapper.drawInfo / RecipeLayout.drawRecipe / RecipesGui.drawScreen
+```
+
+`Recipe.getPropertyTypes()` existed in 2.8 and was removed in 2.9 (the equivalent
+is `recipe.propertyStorage().values()`). GTExpert's mixin calls it on every recipe
+draw, so recipes showed with broken layout / no output.
+
+`RecipePropertyTypesBridgeTransformer` injects the old method onto 2.9's `Recipe`,
+forwarding to `propertyStorage().values()` and returning an empty set when there
+is no storage. Verified in a real launch: `getPropertyTypes` NoSuchMethodError
+count **→ 0**, GT JEI plugin fail **0**, `LoaderExceptionModCrash` **0**, rejected
+recipes still 13 (GTQT core-only).
+
 ## [1.8.2] - 2026-11-23 (HEI: recipes showed without their machine)
 
 **Symptom (user-reported):** many machines (蓄电池, 绝对零度冷冻机, 龙之融合合成器,
