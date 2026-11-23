@@ -86,6 +86,8 @@ public class GTCEuCompatLoadingPlugin implements IFMLLoadingPlugin {
                 // Restore 2.8 Recipe.getOutputs():NonNullList. 2.8 itself builds
                 // NonNullList via NonNullList.func_193580_a(Object,Object[]) (see
                 // GTUtility.copyStackList), so that factory name is confirmed.
+                // 2.8 getPropertyTypes() for GTExpert's HEI mixin
+                "com.gtceu.compat.core.asm.RecipePropertyTypesBridgeTransformer",
                 "com.gtceu.compat.core.asm.RecipeGetOutputsBridgeTransformer",
                 // NOTE: GTRecipeInputStacksNormalizer is DISABLED. Turning empty arrays
                 // into null breaks 2.9's own callers (GTRecipeOreInput.acceptsStack
