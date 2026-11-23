@@ -41,13 +41,44 @@ removed:
    so an empty array takes exactly the branch the 2.8 `null` case already took.
    Pattern matching skips ASM Label/LineNumber pseudo-nodes (opcode < 0).
 
+4. **`RecipePropertyStorageImpl.store` rejected duplicates and `null`.**
+   2.8's `RecipeBuilder.applyProperty` treated `applyProperty(prop, null)` as
+   **remove the property**. 2.9 dropped that branch and forwards `null` to
+   `store`, which returns `false`; `applyProperty` then sets
+   `recipePropertyStorageErrored = true`, so `finalizeAndValidate()` reports
+   INVALID and **the whole recipe is discarded**.
+   New `RecipePropertyStoreOverrideTransformer` rewrites `store`:
+   `null` → `map.remove(prop)` + return true; duplicate key → overwrite;
+   a genuine `ClassCastException` still returns `false` so real authoring errors
+   stay errors.
+   → measured effect: rejected `lff_blast_cooled` recipes **1009 → 0**.
+
+5. **`RecipeBuilder.validate` hard-failed on category/RecipeMap identity.**
+   2.9 requires `category.getRecipeMap() == this.recipeMap` by **reference
+   identity**, otherwise it logs "Cannot apply Category with incompatible
+   RecipeMap" and marks the recipe INVALID. 2.8 addons resolve a category by name
+   (`GTRecipeCategory.getByName(map.getUnlocalizedName())`) and attach it to their
+   own map object, so the identity check fails.
+   `CategoryMapCompatTransformer` rewrites the `INVALID` store at that site to
+   `VALID`; genuinely broken recipes still fail their own output validation.
+   → measured effect: rejected `alloy_blast_smelter` recipes **20 → 0**.
+
 ### Verified
 
 Real Cleanroom launch with the built jar: `LoaderExceptionModCrash == 0`, main
-menu reached (`Narrator library ... successfully loaded`, Realms client started),
-and both `UnsupportedOperationException` and `ArrayIndexOutOfBounds` occurrences
-are **0**. All three transformers log their injection (`getOutputs` bridge,
-`propertyStorage` wrapper, `guarded 1 getInputStacks()[0] site`).
+menu reached (`Narrator library ... successfully loaded`, Realms client started).
+Both `UnsupportedOperationException` and `ArrayIndexOutOfBounds` occurrences are
+**0**, and every transformer logs its injection. **Total rejected recipes dropped
+from 1674 to 670.**
+
+### Still failing (next targets)
+
+- `lff_blast_forging_cooled` × **629** — outputs empty. These come from
+  `LinearForgingFurnaceLoader.attemptForgingCooledRecipe`, which derives outputs
+  from `OreDictUnifier.getMaterial(...)` over the *source* builder's outputs;
+  needs bytecode-level tracing of that path.
+- `electric_baking_oven` × 26 (GTFO, still-stubbed `GTFOMachineRecipes.init`),
+  `replicator` × 5, `mixer`/`large_mixer` × 8, `turbo_blast_recipe` × 2.
 
 ### Still stubbed (next targets)
 
