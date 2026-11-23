@@ -124,6 +124,8 @@ public class GTCEuCompatLoadingPlugin implements IFMLLoadingPlugin {
                 // Restore 2.8 SimpleRecipeBuilder.withRecycling()
                 "com.gtceu.compat.core.asm.SimpleRecipeBuilderRecyclingBridgeTransformer",
                 // Restore 2.8 RecipeMap constructors (UI function supplied by compat layer)
+                // Restore 2.8 RecipeMap.isHidden for JEI plugins
+                "com.gtceu.compat.core.asm.RecipeMapIsHiddenFieldTransformer",
                 "com.gtceu.compat.core.asm.RecipeMapCtorBridgeTransformer",
                 // Restore 2.8 MultiblockAbility(String) constructor
                 "com.gtceu.compat.core.asm.MultiblockAbilityCtorBridgeTransformer",
